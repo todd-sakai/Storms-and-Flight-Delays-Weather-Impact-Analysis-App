@@ -1,0 +1,6 @@
+# Raw data - 6.6 GB, far over GitHub's 100 MB per-file limit.
+# Both partners download these locally; they are never committed.
+Datasets/
+
+# macOS cruft
+.DS_Store
