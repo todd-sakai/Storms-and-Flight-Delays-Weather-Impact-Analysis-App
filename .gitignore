@@ -1,6 +1,11 @@
 # Raw data - 6.6 GB, far over GitHub's 100 MB per-file limit.
 # Both partners download these locally; they are never committed.
-Datasets/
+# NOTE: this excludes directory *contents* rather than the directories themselves,
+# because git cannot re-include a file whose parent directory is excluded.
+Datasets/*
+!Datasets/Primary/
+Datasets/Primary/*
+!Datasets/Primary/README.md
 
 # macOS cruft
 .DS_Store
