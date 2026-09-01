@@ -1,117 +1,43 @@
-# Supplemental Datasets — NOAA Severe Weather Data Inventory, June 2026
+# NOAA Severe Weather Data Inventory - Data Dictionary
 
-Two daily gridded severe-weather products from NOAA's National Centers for Environmental
-Information (NCEI), used to explain weather-driven delay in the primary BTS flight data.
+## Background
 
-Source archive: <https://www.ncei.noaa.gov/pub/data/swdi/database-csv/v2/>
-Downloaded 31 August 2026 as `.csv.gz` and decompressed in place.
+The data contained in these compressed files has been extracted from the Severe Weather Data Inventory (SWDI) maintained by NOAA's National Centers for Environmental Information, retrieved from https://www.ncei.noaa.gov/pub/data/swdi/database-csv/v2/ on 31 August 2026. The time period is indicated in the name of each file; for example, nldn-tiles-202606 contains data of the sixth month of the year 2026. Both files cover all 30 days of June 2026.
 
-Both files share an identical four-column schema and therefore join to the primary dataset
-through the same key.
+Each record is one grid cell on one day. Events are aggregated onto a 0.1-degree latitude/longitude grid, roughly 11 kilometres, and summed over the UTC day. A record exists only where at least one event was detected, so TOTAL_COUNT is never zero and the absence of a record means no detection rather than missing data. Because the day boundary is UTC, a late-evening local storm may be counted on the following ZDAY.
 
-| File | Rows | Size | Distinct cells | Total events |
-|---|---:|---:|---:|---:|
-| `nldn-tiles-202606.csv` | 475,343 | 10.5 MB | 129,733 | 4,538,490 strikes |
-| `hail-tiles-202606.csv` | 338,241 | 7.5 MB | 93,653 | 2,428,076 detections |
+Two files are used. nldn-tiles-202606.csv holds cloud-to-ground lightning strike counts from the Vaisala National Lightning Detection Network: 475,343 records across 129,733 distinct cells, totalling 4,538,490 strikes, spanning longitude -125.6 to -44.5 and latitude 16.6 to 51.7. hail-tiles-202606.csv holds hail detections from the NEXRAD Hail Detection Algorithm: 338,241 records across 93,653 cells, totalling 2,428,076 detections, spanning longitude -167.8 to 147.9 and latitude 10.5 to 67.4. The hail extent is wider because it includes Alaska, Pacific and Caribbean radar sites and crosses the antimeridian, so national maps require consistent extents between the two.
 
-Both cover all 30 days of June 2026 (`20260601`–`20260630`).
+Three characteristics of these files affect how they must be read. First, each file opens with three comment lines prefixed by a hash character, and the third of those is the header naming the columns, so a reader that assumes a header on the first line will misparse the file. Second, the header comment on hail-tiles-202606.csv incorrectly describes its contents as Vaisala NLDN lightning strikes; this is a copy-paste error in NOAA's header generation, present across their hail, structure and lightning tile products, and only the column names and the file name are reliable. Third, these are algorithm outputs rather than verified ground reports, limited to sensor and radar range, and should not be substituted for NCEI's Storm Events Database where confirmed observations are required.
 
-## Schema (both files)
+ZDAY is a date rather than a timestamp, which is why these tile products were selected over the raw point files. The raw files key on ZTIME in UTC to the second, while the primary flight data records times local to each airport with no timezone field, making that join timezone-dependent per airport. Joining these files to the primary dataset still requires converting the integer ZDAY to a date to match FlightDate, and supplying airport coordinates from an external source, since the primary dataset carries airport codes but no latitude or longitude.
 
-| Field | Type | Description |
-|---|---|---|
-| `ZDAY` | integer | UTC day, `YYYYMMDD`. 20260601–20260630 |
-| `CENTERLON` | float | Grid cell centre longitude, degrees |
-| `CENTERLAT` | float | Grid cell centre latitude, degrees |
-| `TOTAL_COUNT` | integer | Events detected in that cell on that day |
+These data are distributed by NOAA as open data with attribution requested. One restriction applies: the lightning observations originate from Vaisala's commercially operated network, and under NOAA's contract the raw flash and strike-level data are available only to government and military users. The daily tile aggregate here is the publicly releasable derivative, which is why the tiles product exists. This file carries no restriction, but strike-level detail cannot be reconstructed from it.
 
-Grid resolution is **0.1 degrees**, roughly 11 km — fine enough to resolve individual airports.
-A row exists only where at least one event was detected, so `TOTAL_COUNT` is never zero and
-absence of a row means "no detection", not "missing data".
+The two CSV files are excluded from version control. Both partners download them from the archive linked above.
 
-### `nldn-tiles-202606.csv` — lightning
+## Record Layout
 
-Cloud-to-ground lightning strike counts from the Vaisala National Lightning Detection Network.
-`TOTAL_COUNT` ranges 1–1,481, mean 9.5. Extent: longitude −125.6 to −44.5, latitude 16.6 to 51.7
-(continental US plus coastal waters).
+Below are fields in the order that they appear on the records. Both files share the same layout.
 
-Chosen as the primary weather signal because lightning is the most operationally direct
-weather-to-delay mechanism: ramp safety rules suspend fuelling, baggage handling and pushback
-when lightning strikes within roughly five miles of the field, which converts immediately into
-departure delay.
+### nldn-tiles-202606.csv
 
-### `hail-tiles-202606.csv` — hail
+4 fields, in the order they appear in the CSV.
 
-Hail detections from the NEXRAD Hail Detection Algorithm. `TOTAL_COUNT` ranges 1–228, mean 7.2.
-Extent: longitude −167.8 to 147.9, latitude 10.5 to 67.4 — **wider than the lightning file**,
-because it includes Alaska, Pacific and Caribbean radar sites and therefore crosses the
-antimeridian. Any national map needs consistent extents between the two.
+| # | Field | Description |
+|---:|---|---|
+| 1 | `ZDAY` | UTC day on which the strikes were recorded, as an integer in YYYYMMDD form. 20260601 to 20260630 |
+| 2 | `CENTERLON` | Longitude of the grid cell centre, decimal degrees. -125.6 to -44.5 |
+| 3 | `CENTERLAT` | Latitude of the grid cell centre, decimal degrees. 16.6 to 51.7 |
+| 4 | `TOTAL_COUNT` | Cloud-to-ground lightning strikes detected in that cell on that day. 1 to 1,481, mean 9.5 |
 
-Chosen as a severity counterpart with a different operational response — ground stops and
-airframe damage rather than ramp suspension.
+### hail-tiles-202606.csv
 
-## Loading these files
+4 fields, in the order they appear in the CSV.
 
-**The header is on line 3 and is comment-prefixed.** All three preamble lines begin with `#`,
-including the one naming the columns, so a default `read_csv` will treat the first comment as the
-header. Load them like this:
-
-```python
-import pandas as pd
-
-COLS = ["ZDAY", "CENTERLON", "CENTERLAT", "TOTAL_COUNT"]
-
-lightning = pd.read_csv("nldn-tiles-202606.csv", comment="#", names=COLS, header=None)
-hail      = pd.read_csv("hail-tiles-202606.csv",  comment="#", names=COLS, header=None)
-
-for df in (lightning, hail):
-    df["date"] = pd.to_datetime(df["ZDAY"], format="%Y%m%d")
-```
-
-## Joining to the primary dataset
-
-`ZDAY` is a **date, not a timestamp**, which is the main reason these tile products were chosen
-over the raw point files. The raw files key on `ZTIME` (`YYYYMMDDHHMMSS`, UTC) while BTS times are
-local to each airport with no timezone field — a per-airport, timezone-dependent join and a likely
-source of silent error. Daily aggregates sidestep it entirely, at the cost of intra-day
-resolution.
-
-Two conversions are still required:
-
-1. **Date format.** `ZDAY` is an integer `20260601`; the primary's `FlightDate` is the string
-   `2026-06-01`. Parse both to datetime before joining.
-2. **Coordinates.** BTS has **no latitude or longitude** — only airport codes and DOT IDs. An
-   external airport coordinate lookup (e.g. OpenFlights) is required, after which each airport
-   maps to its containing 0.1-degree cell by rounding.
-
-Note the UTC day boundary: a late-evening local thunderstorm may be counted on the following
-`ZDAY`.
-
-## Known data-quality issues
-
-1. **`hail-tiles-202606.csv` misdescribes itself.** Its header comment reads *"the count of
-   Vaisala NLDN lightning strikes within a 0.1 degree grid cell"* — identical boilerplate to the
-   lightning file. This is a copy-paste error in NOAA's header generation, present across their
-   hail, structure and lightning tile products. The data are hail detections; only the column
-   names and the filename are reliable.
-2. **These are algorithm output, not verified ground reports.** The hail detection algorithm
-   infers hail from radar signatures; NCEI's raw point files label themselves
-   `#This file contains experimental data.` Do not treat these as confirmed hailfall, and do not
-   substitute them for NCEI's Storm Events Database where ground truth matters.
-3. **Coverage is limited to radar and sensor range**, so absence of detections in remote areas is
-   not evidence of absence of weather.
-
-## Licensing
-
-NOAA open data — free to use and redistribute, with attribution requested.
-
-**One genuine restriction:** the lightning data originates from Vaisala's commercially-operated
-NLDN. Under NOAA's contract, raw flash and strike-level data are restricted to government and
-military users. The 0.1-degree daily tile aggregate here is the publicly releasable derivative —
-that aggregation is why the tiles product exists. This file is unrestricted, but strike-level
-detail cannot be reconstructed from it.
-
-## Not in version control
-
-The two CSVs are gitignored — 18 MB of data that both partners download from the NCEI archive
-above rather than committing. Only this README is tracked.
+| # | Field | Description |
+|---:|---|---|
+| 1 | `ZDAY` | UTC day on which the detections were recorded, as an integer in YYYYMMDD form. 20260601 to 20260630 |
+| 2 | `CENTERLON` | Longitude of the grid cell centre, decimal degrees. -167.8 to 147.9 |
+| 3 | `CENTERLAT` | Latitude of the grid cell centre, decimal degrees. 10.5 to 67.4 |
+| 4 | `TOTAL_COUNT` | Hail detections in that cell on that day. 1 to 228, mean 7.2 |
