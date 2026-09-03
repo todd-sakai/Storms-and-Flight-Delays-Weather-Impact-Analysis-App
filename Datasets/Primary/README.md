@@ -2,7 +2,7 @@
 
 ## Background
 
-The data contained in the compressed file has been extracted from the Reporting Carrier On-Time Performance (1987-present) data table of the "On-Time" database from the TranStats data library. The time period is indicated in the name of the compressed file; for example, XXX_XXXXX_2001_1 contains data of the first month of the year 2001.
+The data contained in the file has been extracted from the Reporting Carrier On-Time Performance (1987-present) data table of the "On-Time" database from the TranStats data library. The time period is indicated in the name of the compressed file; for example, XXX_XXXXX_2001_1 contains data of the first month of the year 2001.
 
 ## Record Layout
 
