@@ -3,9 +3,9 @@
 Running notes on datasets explored for the Fusion project, and why each was chosen or rejected.
 Newest decisions at the bottom.
 
-## Primary dataset
+## Primary Dataset
 
-**BTS Reporting Carrier On-Time Performance, June 2026**
+**BTS Reporting Carrier On-Time Performance, June 2026** \
 (`On_Time_Reporting_Carrier_On_Time_Performance_(1987_present)_2026_6.csv`)
 
 Source: US DOT Bureau of Transportation Statistics, TranStats On-Time database.
@@ -17,9 +17,9 @@ Fully documented: BTS ships a `readme.html` data dictionary, converted to
 `Datasets/Primary/README.md` and verified field-for-field against the actual CSV header (109
 documented fields, 109 non-empty header cells, order matches exactly).
 
-## Supplemental datasets
+## Supplemental Datasets
 
-**Daily lightning strike counts, June 2026**
+**Daily lightning strike counts, June 2026** \
 (`nldn-tiles-202606.csv`)
 
 Source: NOAA NCEI Severe Weather Data Inventory CSV archive.
@@ -32,7 +32,7 @@ departure delay. The 0.1-degree grid (~11 km) resolves individual airports. Crit
 `ZDAY` key is a **date**, not a timestamp - so it joins to `FlightDate` with no timezone
 conversion.
 
-**Daily hail detection counts, June 2026**
+**Daily hail detection counts, June 2026** \
 (`hail-tiles-202606.csv`)
 
 Source: NOAA NCEI Severe Weather Data Inventory CSV archive.
@@ -44,13 +44,13 @@ through the same key. June's peak severe season makes hail worth including; in a
 month it would have been much sparser.
 
 
-## Action items
+## Action Items
 
 - **BTS has no coordinates** - only airport codes and DOT IDs. An external airport lat/lon lookup
   (e.g. OpenFlights) is required before any spatial join to the weather grids can work.
 
 
-## Research questions
+## Research Questions
 1. How does the daily volume of lightning near an airport relate to that airport's mean departure delay?
 2. Which of the 351 airports show the strongest weather-delay sensitivity, and does that track their geography?
 3. Does BTS's own WeatherDelay attribution agree with independently observed lightning and hail activity on the same date and location?
