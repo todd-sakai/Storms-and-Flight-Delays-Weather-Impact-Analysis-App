@@ -1,7 +1,4 @@
 # Raw data - far over GitHub's 100 MiB per-file limit.
-# Both partners download these from the sources listed in each README.
-# NOTE: this excludes directory *contents* rather than the directories themselves,
-# because git cannot re-include a file whose parent directory is excluded.
 Datasets/*
 
 !Datasets/Primary/
