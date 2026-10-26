@@ -11,3 +11,7 @@ Datasets/Supplemental/*
 
 # macOS cruft
 .DS_Store
+
+# Python virtual environments and caches
+venv/
+__pycache__/
