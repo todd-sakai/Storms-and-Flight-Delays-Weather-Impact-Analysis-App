@@ -2,3 +2,6 @@ streamlit
 gcsfs
 pandas
 altair
+scikit-learn
+openai
+logfire
