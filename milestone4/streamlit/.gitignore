@@ -1,0 +1,17 @@
+# Raw data - far over GitHub's 100 MiB per-file limit.
+Datasets/*
+
+!Datasets/Primary/
+Datasets/Primary/*
+!Datasets/Primary/README.md
+
+!Datasets/Supplemental/
+Datasets/Supplemental/*
+!Datasets/Supplemental/README.md
+
+# macOS cruft
+.DS_Store
+
+# Python virtual environments and caches
+venv/
+__pycache__/

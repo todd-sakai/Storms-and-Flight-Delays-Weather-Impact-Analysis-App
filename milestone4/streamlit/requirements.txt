@@ -1,0 +1,7 @@
+streamlit==1.66.0
+gcsfs==2026.10.1
+pandas==3.0.6
+altair==6.3.0
+openai==2.54.0
+pydantic==2.13.4
+logfire==5.4.0
